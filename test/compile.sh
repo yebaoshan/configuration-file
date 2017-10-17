@@ -7,4 +7,4 @@
 #
 
 
-gcc main.c -o main -L../src -I../src -lini
+gcc main.c -g -o main -L../src -I../src -lini
