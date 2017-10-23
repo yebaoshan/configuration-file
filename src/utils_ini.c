@@ -529,41 +529,56 @@ static int write_arg(FILE *file, add_arg_user_t *user,
         return -1;
     }
 
+    char line[INI_MAX_LINE] = {0};
     if (user->section_pos == -1) {
         fseek(file, 0, SEEK_END);
-        fprintf(file, "\n[%s]\n", user->section_name);
+        //fprintf(file, "\n[%s]\n", user->section_name);
+        snprintf(line, sizeof(line), "\n[%s]\n", user->section_name);
+        fwrite(line, sizeof(char), strlen(line), file);
+
+        user->arg_bpos = user->arg_epos = ftell(file);
+    } else if (user->arg_bpos == -1 && user->arg_epos == -1) {
         user->arg_bpos = user->arg_epos = ftell(file);
     } else if (user->arg_bpos != -1 && user->arg_epos == -1) {
         user->arg_epos = ftell(file);
     }
 
     fseek(file, 0, SEEK_END);
+    char *buf = NULL;
     long len = ftell(file) - user->arg_epos;
-    char *buf = (char*)malloc((size_t)len);
-    if (!buf) {
-        ERROR("Failed to malloc buf, len(%ld)", len);
-        return -1;
-    }
+    if (len) {
+        buf = (char*)malloc((size_t)len);
+        if (!buf) {
+            ERROR("Failed to malloc buf, len(%ld)", len);
+            return -1;
+        }
 
-    fseek(file, user->arg_epos, SEEK_SET);
-    if (len != fread(buf, sizeof(char), (size_t)len, file)) {
-        ERROR("Failed to read last content, len:%ld", len);
-        return -1;
+        fseek(file, user->arg_epos, SEEK_SET);
+        if (len != fread(buf, sizeof(char), (size_t)len, file)) {
+            ERROR("Failed to read last content, len:%ld", len);
+            return -1;
+        }
     }
 
     char name[INI_MAX_NAME];
     char **values;
     size_t values_number;
     fseek(file, user->arg_bpos, SEEK_SET);
-    fprintf(file, "%s = ", arg_data->name);
+    //fprintf(file, "%s = ", arg_data->name);
+    memset(line, 0 , sizeof(line));
+    snprintf(line, sizeof(line), "%s = ", arg_data->name);
+    fwrite(line, sizeof(char), strlen(line), file);
 
     for (int i = 0; i < arg_data->values_number; ++i) {
-        fprintf(file, "    %s\n", *(arg_data->values + i));
+        //fprintf(file, "    %s\n", *(arg_data->values + i));
+        memset(line, 0 , sizeof(line));
+        snprintf(line, sizeof(line), "    %s\n", *(arg_data->values + i));
+        fwrite(line, sizeof(char), strlen(line), file);
     }
 
     if (len != 0) {
-        //fwrite(buf, sizeof(char), (size_t)len, file);
-        fprintf(file, "%s", buf);
+        fwrite(buf, sizeof(char), (size_t)len, file);
+        //fprintf(file, "%s", buf);
         fflush(file);
         fsync(fd);
     }
