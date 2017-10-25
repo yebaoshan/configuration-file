@@ -48,11 +48,11 @@ int main()
     arg_data = malloc(sizeof(ini_arg_data_t));
     memset(arg_data, 0, sizeof(ini_arg_data_t));
     strcpy(arg_data->name, "Module");
-    arg_data->values_number = 2;
+    arg_data->values_number = 3;
     char **values = (char**)malloc(arg_data->values_number * sizeof(char*));
     values[0] = strdup("cpu");
     values[1] = strdup("memory");
-    values[1] = strdup("process");
+    values[2] = strdup("process");
     arg_data->values = values;
     print_arg_data(arg_data);
     int ret = add_arg(filename, "System", arg_data);
